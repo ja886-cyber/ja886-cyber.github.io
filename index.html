@@ -223,12 +223,24 @@
             <input type="range" id="seed" min="1" max="9999" value="1234" step="1">
 
         </div>
+        
+
+        <div class="control-group">
+            
+            <label>Water Level <span class="value-display" id="water-value">2</span></label>
+            
+            <input type="range" id="water" min="-5" max="10" value="2" step="0.5">
+        
+        </div>
 
         
 
         <button id="regenerate">Regenerate Terrain</button>
 
         <button id="randomize">Randomize Parameters</button>
+
+        <button id="changeClimate">Change Climate</button>
+        
 
         
 
@@ -464,6 +476,12 @@
 
         let noiseGenerator;
 
+        let water;
+
+        let waterLevel = 2;
+
+        let climate = 0;
+
         
 
         const params = {
@@ -642,7 +660,7 @@
 
             
 
-            // Color based on height
+            // Color based on climate and height
 
             const colors = [];
 
@@ -654,21 +672,33 @@
 
                 
 
-                if (height < 2) {
+                if (biome === 0){ // grassland
 
-                    color.setHex(0x8B7355); // Brown (low)
+                    if(height < 2) color.setHex(0x8B7355);
+                    
+                    else if(height < 8) color.setHex(0x228B22);
+                    
+                    else if(height < 15) color.setHex(0x90EE90);
+                    
+                    else color.setHex(0xffffff);
 
-                } else if (height < 8) {
+                }
 
-                    color.setHex(0x228B22); // Forest green
+                if (biome === 1){ // desert
 
-                } else if (height < 15) {
+                    if(height < 5) color.setHex(0xd9c28f);
+                    
+                    else if(height < 12) color.setHex(0xc2a15a);
+                    
+                    else color.setHex(0xeee2c4);
 
-                    color.setHex(0x90EE90); // Light green
+                }
 
-                } else {
+                if (biome === 2){ // snow
 
-                    color.setHex(0xFFFFFF); // White (peaks)
+                    if(height < 4) color.setHex(0x6b8ba4);
+                    
+                    else color.setHex(0xffffff);
 
                 }
 
@@ -705,6 +735,27 @@
             terrain.receiveShadow = true;
 
             scene.add(terrain);
+
+            //Create water
+
+            if (water) scene.remove(water);
+
+            const waterGeo = new THREE.PlaneGeometry(120,120);
+                
+            const waterMat = new THREE.MeshStandardMaterial({
+                
+                color: 0x3399ff,
+                transparent: true,
+                opacity: 0.6
+            });
+
+            water = new THREE.Mesh(waterGeo, waterMat);
+            
+            water.rotation.x = -Math.PI / 2;
+            
+            water.position.y = waterLevel;
+
+            scene.add(water);
 
         }
 
@@ -822,7 +873,9 @@
 
                 lacunarity: document.getElementById('lacunarity'),
 
-                seed: document.getElementById('seed')
+                seed: document.getElementById('seed'),
+
+                water: document.getElementById('water')
 
             };
 
@@ -864,7 +917,7 @@
 
                 params.seed = Math.floor(Math.random() * 9999);
 
-                
+
 
                 Object.keys(sliders).forEach(key => {
 
@@ -874,10 +927,17 @@
 
                 });
 
-                
 
                 generateTerrain();
 
+            });
+
+            document.getElementById("changeClimate").onclick = () => {
+            
+                climate = (climate + 1) % 3;
+            
+                generateTerrain();
+        
             });
 
         }
@@ -1233,10 +1293,12 @@
             stopAudio();
 
         });
+        
 
     </script>
 
 </body>
 
 </html>
+
 
